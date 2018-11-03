@@ -5,6 +5,10 @@
 #
 # Author: Matty < matty91 at gmail dot com >
 #
+# Current Version: 2.18
+# Last Updated: 4-Nov-2018
+# Fixed support for .it domains -- Pelligra Giuseppe
+#
 # Current Version: 2.17
 # Last Updated: 6-Dec-2017
 #
@@ -387,6 +391,9 @@ check_domain_status()
     elif [ "${TLDTYPE}" == "tr" ];
     then
        REGISTRAR=`cat ${WHOIS_TMP} | ${GREP} "Organization Name" -m 1 | ${AWK} -F: '{print $2}'`
+    elif [ "${TLDTYPE}" == "it" ];
+    then
+       REGISTRAR=`cat ${WHOIS_TMP} | ${GREP} "Organization" -m 1 | ${AWK} -F: '{print $2}'`
     fi
 
     # If the Registrar is NULL, then we didn't get any data
@@ -448,6 +455,29 @@ check_domain_status()
 		esac
             tday=`echo ${tdomdate} | ${CUT} -d'-' -f3`
 	    DOMAINDATE=`echo $tday-$tmonth-$tyear`
+	elif [ "${TLDTYPE}" == "it" ];
+    	then	
+           tdomdate=`cat ${WHOIS_TMP} | ${AWK} '/Expire Date:/ { print $3 }' | ${CUT} -d ':' -f2`
+           tyear=`echo ${tdomdate} | ${CUT} -d'-' -f1`
+           tmon=`echo ${tdomdate} |${CUT} -d'-' -f2`
+	       case ${tmon} in
+	             1|01) tmonth=jan ;;
+	             2|02) tmonth=feb ;;
+	             3|03) tmonth=mar ;;
+	             4|04) tmonth=apr ;;
+	             5|05) tmonth=may ;;
+	             6|06) tmonth=jun ;;
+	             7|07) tmonth=jul ;;
+	             8|08) tmonth=aug ;;
+	             9|09) tmonth=sep ;;
+	             10) tmonth=oct ;;
+	             11) tmonth=nov ;;
+	             12) tmonth=dec ;;
+	             *) tmonth=0 ;;
+	       esac
+	   tday=`echo ${tdomdate} | ${CUT} -d "-" -f 3 | ${CUT} -d "T" -f 1`
+           DOMAINDATE=`echo "${tday}-${tmonth}-${tyear}"`
+	   
     elif [ "${TLDTYPE}" == "uk" ]; # for .uk domain
     then
             DOMAINDATE=`cat ${WHOIS_TMP} | ${AWK} '/Renewal date:/ || /Expiry date:/ { print $3 }'`
